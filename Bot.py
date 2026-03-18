@@ -1,8 +1,9 @@
 import discord
+import os
 from openai import OpenAI
 
-GROQ_NYCKEL = "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"
-DISCORD_TOKEN = "MTQ4Mzg2NDQ5NzAyOTUxMzM2OQ.Gcw6WD.p-WsXABtDMCvfWb3uXAqvodaB3hT0lyCFX8BZM"
+GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 client = OpenAI(
     api_key=GROQ_NYCKEL,
