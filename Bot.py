@@ -14,7 +14,6 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-# Flask webbserver så Render håller boten vid liv
 app = Flask(__name__)
 
 @app.route('/')
@@ -23,8 +22,6 @@ def home():
 
 def run_flask():
     app.run(host='0.0.0.0', port=8080)
-
-Thread(target=run_flask).start()
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -89,4 +86,6 @@ Håll svaren korta och naturliga som i ett riktigt samtal."""}
 
             await vc.disconnect()
 
+# Starta Flask i bakgrunden, sen Discord
+Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
