@@ -1,6 +1,8 @@
 import discord
 import os
+import asyncio
 from openai import OpenAI
+from gtts import gTTS
 
 GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -54,4 +56,28 @@ Håll svaren korta och naturliga som i ett riktigt samtal."""}
 
         await message.reply(svar)
 
+        # Kolla om användaren är i en röstkanal
+        if message.author.voice and message.author.voice.channel:
+            röstkanal = message.author.voice.channel
+
+            # Generera tal med gTTS
+            tts = gTTS(text=svar, lang="sv")
+            tts.save("svar.mp3")
+
+            # Gå med i röstkanalen och spela upp
+            if message.guild.voice_client is None:
+                vc = await röstkanal.connect()
+            else:
+                vc = message.guild.voice_client
+                await vc.move_to(röstkanal)
+
+            vc.play(discord.FFmpegPCMAudio("svar.mp3"))
+
+            # Vänta tills den är klar sen lämna
+            while vc.is_playing():
+                await asyncio.sleep(1)
+
+            await vc.disconnect()
+
 bot.run(DISCORD_TOKEN)
+```
