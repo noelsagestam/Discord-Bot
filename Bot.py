@@ -80,4 +80,3 @@ Håll svaren korta och naturliga som i ett riktigt samtal."""}
             await vc.disconnect()
 
 bot.run(DISCORD_TOKEN)
-```
