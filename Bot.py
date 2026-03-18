@@ -1,6 +1,3 @@
-Självklart! Här är den enkla koden utan Flask – bara för Railway:
-
-```python
 import discord
 import os
 import asyncio
