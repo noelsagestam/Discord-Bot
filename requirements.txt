@@ -1,2 +1,4 @@
-discord.py
+discord.py[voice]
 openai
+gTTS
+PyNaCl
