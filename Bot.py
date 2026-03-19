@@ -26,17 +26,22 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith("!bild"):
-        prompt = message.content[6:]
-        if prompt:
-            async with message.channel.typing():
-                url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
+   if message.content.startswith("!bild"):
+    prompt = message.content[6:]
+    if prompt:
+        async with message.channel.typing():
+            url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
+            try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as resp:
+                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
                         if resp.status == 200:
                             data = await resp.read()
                             await message.reply(file=discord.File(fp=__import__('io').BytesIO(data), filename="bild.png"))
-        return
+                        else:
+                            await message.reply("Kunde inte generera bilden, försök igen!")
+            except Exception as e:
+                await message.reply("Tog för lång tid, försök igen!")
+    return
 
     if message.channel.name == "ai-chat":
         user_id = message.author.id
