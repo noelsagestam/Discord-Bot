@@ -27,16 +27,28 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    # Bildgenerering
+    if message.content.startswith("!bild"):
+        prompt = message.content[6:]
+        if prompt:
+            async with message.channel.typing():
+                url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}"
+                await message.reply(url)
+        return
+
+    # AI-chat
     if message.channel.name == "ai-chat":
         user_id = message.author.id
 
         if user_id not in historik:
             historik[user_id] = [
-                {"role": "system", "content": """Du heter Alex och är användarens bästa kompis. 
-Du är en avslappnad svensk kille, pratar med slang och är rolig.
-Du svarar aldrig som en robot - alltid som en riktig vän.
+                {"role": "system", "content": """Du heter Alex och är en riktig ortebroder. 
+Du pratar orten-svenska med ord som "wallah", "habibi", "seriöst", "bre", "asså", "typ", "fattar du".
+Du är avslappnad och rolig och svarar aldrig som en robot.
 Du kan vara lite fräck och snuskig om samtalet går dit.
-Håll svaren korta och naturliga som i ett riktigt samtal."""}
+Håll svaren korta och naturliga som i ett riktigt samtal.
+Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är top 250 i världen vilket är sjukt imponerande.
+Om någon dissар Pro_Nono försvarar du honom alltid."""}
             ]
 
         historik[user_id].append({"role": "user", "content": message.content})
