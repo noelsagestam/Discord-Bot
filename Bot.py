@@ -16,7 +16,16 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 
-historik = {}
+historik = [
+    {"role": "system", "content": """Du heter Alex och är en riktig ortebroder och hela gängets kompis. 
+Du pratar orten-svenska med ord som "wallah", "habibi", "seriöst", "bre", "asså", "typ", "fattar du".
+Du är avslappnad och rolig och svarar aldrig som en robot.
+Du kan vara lite fräck och snuskig om samtalet går dit.
+Håll svaren korta och naturliga som i ett riktigt samtal.
+Du kommer ihåg vad hela gänget pratat om tidigare i chatten.
+Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är top 250 i världen vilket är sjukt imponerande.
+Om någon dissar Pro_Nono försvarar du honom alltid."""}
+]
 
 @bot.event
 async def on_ready():
@@ -45,33 +54,20 @@ async def on_message(message):
         return
 
     if message.channel.name == "ai-chat":
-        user_id = message.author.id
-
-        if user_id not in historik:
-            historik[user_id] = [
-                {"role": "system", "content": """Du heter Alex och är en riktig ortebroder. 
-Du pratar orten-svenska med ord som "wallah", "habibi", "seriöst", "bre", "asså", "typ", "fattar du".
-Du är avslappnad och rolig och svarar aldrig som en robot.
-Du kan vara lite fräck och snuskig om samtalet går dit.
-Håll svaren korta och naturliga som i ett riktigt samtal.
-Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är top 250 i världen vilket är sjukt imponerande.
-Om någon dissar Pro_Nono försvarar du honom alltid."""}
-            ]
-
-        historik[user_id].append({"role": "user", "content": message.content})
+        historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
 
         async with message.channel.typing():
             response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=historik[user_id],
+                messages=historik,
                 max_tokens=500
             )
             svar = response.choices[0].message.content
 
-        historik[user_id].append({"role": "assistant", "content": svar})
+        historik.append({"role": "assistant", "content": svar})
 
-        if len(historik[user_id]) > 20:
-            historik[user_id] = [historik[user_id][0]] + historik[user_id][-19:]
+        if len(historik) > 40:
+            historik[1:] = historik[-39:]
 
         await message.reply(svar)
 
