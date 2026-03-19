@@ -1,5 +1,6 @@
 import discord
 import os
+import aiohttp
 from openai import OpenAI
 
 GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
@@ -30,7 +31,11 @@ async def on_message(message):
         if prompt:
             async with message.channel.typing():
                 url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
-                await message.reply(url)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as resp:
+                        if resp.status == 200:
+                            data = await resp.read()
+                            await message.reply(file=discord.File(fp=__import__('io').BytesIO(data), filename="bild.png"))
         return
 
     if message.channel.name == "ai-chat":
