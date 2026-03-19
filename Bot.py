@@ -70,4 +70,9 @@ Om någon dissar Pro_Nono försvarar du honom alltid."""}
 
         historik[user_id].append({"role": "assistant", "content": svar})
 
-        if len(historik[u
+        if len(historik[user_id]) > 20:
+            historik[user_id] = [historik[user_id][0]] + historik[user_id][-19:]
+
+        await message.reply(svar)
+
+bot.run(DISCORD_TOKEN)
