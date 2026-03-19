@@ -32,7 +32,7 @@ async def on_message(message):
         prompt = message.content[6:]
         if prompt:
             async with message.channel.typing():
-                url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}"
+               url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
                 await message.reply(url)
         return
 
