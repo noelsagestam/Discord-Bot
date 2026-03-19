@@ -1,6 +1,7 @@
 import discord
 import os
 import aiohttp
+import io
 from openai import OpenAI
 
 GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
@@ -26,22 +27,22 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-   if message.content.startswith("!bild"):
-    prompt = message.content[6:]
-    if prompt:
-        async with message.channel.typing():
-            url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
-                        if resp.status == 200:
-                            data = await resp.read()
-                            await message.reply(file=discord.File(fp=__import__('io').BytesIO(data), filename="bild.png"))
-                        else:
-                            await message.reply("Kunde inte generera bilden, försök igen!")
-            except Exception as e:
-                await message.reply("Tog för lång tid, försök igen!")
-    return
+    if message.content.startswith("!bild"):
+        prompt = message.content[6:]
+        if prompt:
+            async with message.channel.typing():
+                url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
+                            if resp.status == 200:
+                                data = await resp.read()
+                                await message.reply(file=discord.File(fp=io.BytesIO(data), filename="bild.png"))
+                            else:
+                                await message.reply("Kunde inte generera bilden, försök igen!")
+                except Exception:
+                    await message.reply("Tog för lång tid, försök igen!")
+        return
 
     if message.channel.name == "ai-chat":
         user_id = message.author.id
@@ -69,9 +70,4 @@ Om någon dissar Pro_Nono försvarar du honom alltid."""}
 
         historik[user_id].append({"role": "assistant", "content": svar})
 
-        if len(historik[user_id]) > 20:
-            historik[user_id] = [historik[user_id][0]] + historik[user_id][-19:]
-
-        await message.reply(svar)
-
-bot.run(DISCORD_TOKEN)
+        if len(historik[u
