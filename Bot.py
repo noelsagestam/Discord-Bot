@@ -1,8 +1,10 @@
 import discord
 import os
+import asyncio
 import aiohttp
 import io
 from openai import OpenAI
+from gtts import gTTS
 from flask import Flask
 from threading import Thread
 
@@ -64,7 +66,7 @@ async def on_message(message):
                     await message.reply("Tog för lång tid, försök igen!")
         return
 
-    if message.channel.name == "ai-chat":
+    if message.channel.name == "ai-chat" or message.channel.name == "Spel hörna":
         historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
 
         async with message.channel.typing():
@@ -81,6 +83,24 @@ async def on_message(message):
             historik[1:] = historik[-39:]
 
         await message.reply(svar)
+
+        if message.author.voice and message.author.voice.channel:
+            röstkanal = message.author.voice.channel
+            tts = gTTS(text=svar, lang="sv")
+            tts.save("/tmp/svar.mp3")
+
+            if message.guild.voice_client is None:
+                vc = await röstkanal.connect()
+            else:
+                vc = message.guild.voice_client
+                await vc.move_to(röstkanal)
+
+            vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
+
+            while vc.is_playing():
+                await asyncio.sleep(1)
+
+            await vc.disconnect()
 
 Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
