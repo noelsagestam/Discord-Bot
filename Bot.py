@@ -72,7 +72,7 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith("/join"):
+    if message.content.startswith("/joina"):
         röstkanal = discord.utils.get(message.guild.voice_channels, name="Spel hörna")
         if röstkanal:
             if message.guild.voice_client is None:
@@ -82,7 +82,7 @@ async def on_message(message):
             await message.reply("Hittar inte kanalen Spel hörna!")
         return
 
-    if message.content.startswith("/leave"):
+    if message.content.startswith("/lämna"):
         if message.guild.voice_client:
             await message.guild.voice_client.disconnect()
             await message.reply("👋 Lämnade röstkanalen!")
