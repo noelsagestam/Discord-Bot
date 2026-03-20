@@ -40,36 +40,9 @@ Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är 
 Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
 
-async def spela_i_röstkanal(guild, svar):
-    röstkanal = discord.utils.get(guild.voice_channels, name="Spel hörna")
-    if not röstkanal:
-        print("Hittar inte röstkanalen!")
-        return
-
-    tts = gTTS(text=svar, lang="sv")
-    tts.save("/tmp/svar.mp3")
-
-    if guild.voice_client is None:
-        vc = await röstkanal.connect()
-    else:
-        vc = guild.voice_client
-        if vc.channel != röstkanal:
-            await vc.move_to(röstkanal)
-
-    while vc.is_playing():
-        await asyncio.sleep(0.5)
-
-    vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
-
-    while vc.is_playing():
-        await asyncio.sleep(1)
-
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} är online!")
-    for guild in bot.guilds:
-        for kanal in guild.voice_channels:
-            print(f"Röstkanal hittad: '{kanal.name}'")
 
 @bot.event
 async def on_message(message):
@@ -77,13 +50,13 @@ async def on_message(message):
         return
 
     if message.content.startswith("/joina"):
-        röstkanal = discord.utils.get(message.guild.voice_channels, name="Spel hörna")
-        if röstkanal:
+        if message.author.voice and message.author.voice.channel:
+            röstkanal = message.author.voice.channel
             if message.guild.voice_client is None:
                 await röstkanal.connect()
-            await message.reply("✅ Joinade Spel hörna!")
+            await message.reply("✅ Joinade röstkanalen!")
         else:
-            await message.reply("Hittar inte kanalen!")
+            await message.reply("Du måste vara i en röstkanal!")
         return
 
     if message.content.startswith("/lämna"):
@@ -109,7 +82,7 @@ async def on_message(message):
                     await message.reply("Tog för lång tid, försök igen!")
         return
 
-    if message.channel.name == "ai-chat" or message.channel.name == "Spel hörna":
+    if message.channel.name == "ai-chat":
         historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
 
         async with message.channel.typing():
@@ -126,7 +99,15 @@ async def on_message(message):
             historik[1:] = historik[-39:]
 
         await message.reply(svar)
-        await spela_i_röstkanal(message.guild, svar)
+
+        if message.guild.voice_client and message.guild.voice_client.is_connected():
+            tts = gTTS(text=svar, lang="sv")
+            tts.save("/tmp/svar.mp3")
+
+            while message.guild.voice_client.is_playing():
+                await asyncio.sleep(0.5)
+
+            message.guild.voice_client.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
 
 Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
