@@ -40,6 +40,29 @@ Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är 
 Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
 
+async def spela_i_röstkanal(guild, svar):
+    röstkanal = discord.utils.get(guild.voice_channels, name="Spel hörna")
+    if not röstkanal:
+        return
+
+    tts = gTTS(text=svar, lang="sv")
+    tts.save("/tmp/svar.mp3")
+
+    if guild.voice_client is None:
+        vc = await röstkanal.connect()
+    else:
+        vc = guild.voice_client
+        if vc.channel != röstkanal:
+            await vc.move_to(röstkanal)
+
+    while vc.is_playing():
+        await asyncio.sleep(0.5)
+
+    vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
+
+    while vc.is_playing():
+        await asyncio.sleep(1)
+
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} är online!")
@@ -47,6 +70,22 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
+        return
+
+    if message.content.startswith("/join"):
+        röstkanal = discord.utils.get(message.guild.voice_channels, name="Spel hörna")
+        if röstkanal:
+            if message.guild.voice_client is None:
+                await röstkanal.connect()
+            await message.reply("✅ Joinade Spel hörna!")
+        else:
+            await message.reply("Hittar inte kanalen Spel hörna!")
+        return
+
+    if message.content.startswith("/leave"):
+        if message.guild.voice_client:
+            await message.guild.voice_client.disconnect()
+            await message.reply("👋 Lämnade röstkanalen!")
         return
 
     if message.content.startswith("!bild"):
@@ -83,24 +122,7 @@ async def on_message(message):
             historik[1:] = historik[-39:]
 
         await message.reply(svar)
-
-        if message.author.voice and message.author.voice.channel:
-            röstkanal = message.author.voice.channel
-            tts = gTTS(text=svar, lang="sv")
-            tts.save("/tmp/svar.mp3")
-
-            if message.guild.voice_client is None:
-                vc = await röstkanal.connect()
-            else:
-                vc = message.guild.voice_client
-                await vc.move_to(röstkanal)
-
-            vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
-
-            while vc.is_playing():
-                await asyncio.sleep(1)
-
-            await vc.disconnect()
+        await spela_i_röstkanal(message.guild, svar)
 
 Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
