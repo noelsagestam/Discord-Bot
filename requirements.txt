@@ -1,4 +1,6 @@
-discord.py
+discord.py[voice]
 openai
 aiohttp
 flask
+gTTS
+PyNaCl
