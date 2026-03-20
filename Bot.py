@@ -3,8 +3,8 @@ import os
 import asyncio
 import aiohttp
 import io
+import edge_tts
 from openai import OpenAI
-from gtts import gTTS
 from flask import Flask
 from threading import Thread
 
@@ -39,6 +39,10 @@ Du kommer ihåg vad hela gänget pratat om tidigare i chatten.
 Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är top 250 i världen vilket är sjukt imponerande.
 Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
+
+async def generera_tal(text):
+    kommunikator = edge_tts.Communicate(text, voice="sv-SE-MattiasNeural")
+    await kommunikator.save("/tmp/svar.mp3")
 
 @bot.event
 async def on_ready():
@@ -93,8 +97,7 @@ async def on_message(message):
                 if vc.channel != röstkanal:
                     await vc.move_to(röstkanal)
 
-            tts = gTTS(text=svar, lang="sv")
-            tts.save("/tmp/svar.mp3")
+            await generera_tal(svar)
 
             while vc.is_playing():
                 await asyncio.sleep(0.5)
