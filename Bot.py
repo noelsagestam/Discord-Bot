@@ -49,22 +49,6 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith("/joina"):
-        if message.author.voice and message.author.voice.channel:
-            röstkanal = message.author.voice.channel
-            if message.guild.voice_client is None:
-                await röstkanal.connect()
-            await message.reply("✅ Joinade röstkanalen!")
-        else:
-            await message.reply("Du måste vara i en röstkanal!")
-        return
-
-    if message.content.startswith("/lämna"):
-        if message.guild.voice_client:
-            await message.guild.voice_client.disconnect()
-            await message.reply("👋 Lämnade röstkanalen!")
-        return
-
     if message.content.startswith("!bild"):
         prompt = message.content[6:]
         if prompt:
@@ -100,14 +84,25 @@ async def on_message(message):
 
         await message.reply(svar)
 
-        if message.guild.voice_client and message.guild.voice_client.is_connected():
+        if message.author.voice and message.author.voice.channel:
+            röstkanal = message.author.voice.channel
+            if message.guild.voice_client is None:
+                vc = await röstkanal.connect()
+            else:
+                vc = message.guild.voice_client
+                if vc.channel != röstkanal:
+                    await vc.move_to(röstkanal)
+
             tts = gTTS(text=svar, lang="sv")
             tts.save("/tmp/svar.mp3")
 
-            while message.guild.voice_client.is_playing():
+            while vc.is_playing():
                 await asyncio.sleep(0.5)
 
-            message.guild.voice_client.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
+            vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
+
+            while vc.is_playing():
+                await asyncio.sleep(1)
 
 Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
