@@ -41,7 +41,7 @@ Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
 
 async def spela_i_röstkanal(guild, svar):
-    röstkanal = discord.utils.get(guild.voice_channels, name="Spel hörna")
+    röstkanal = discord.utils.get(guild.voice_channels, name="spel hörna")
     if not röstkanal:
         return
 
