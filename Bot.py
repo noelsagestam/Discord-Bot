@@ -41,8 +41,9 @@ Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
 
 async def spela_i_röstkanal(guild, svar):
-    röstkanal = discord.utils.get(guild.voice_channels, name="spel hörna")
+    röstkanal = discord.utils.get(guild.voice_channels, name="Spel hörna")
     if not röstkanal:
+        print("Hittar inte röstkanalen!")
         return
 
     tts = gTTS(text=svar, lang="sv")
@@ -66,6 +67,9 @@ async def spela_i_röstkanal(guild, svar):
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} är online!")
+    for guild in bot.guilds:
+        for kanal in guild.voice_channels:
+            print(f"Röstkanal hittad: '{kanal.name}'")
 
 @bot.event
 async def on_message(message):
@@ -79,7 +83,7 @@ async def on_message(message):
                 await röstkanal.connect()
             await message.reply("✅ Joinade Spel hörna!")
         else:
-            await message.reply("Hittar inte kanalen Spel hörna!")
+            await message.reply("Hittar inte kanalen!")
         return
 
     if message.content.startswith("/lämna"):
