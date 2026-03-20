@@ -2,5 +2,5 @@ discord.py[voice]
 openai
 aiohttp
 flask
-gTTS
+edge-tts
 PyNaCl
