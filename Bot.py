@@ -3,8 +3,9 @@ import os
 import asyncio
 import aiohttp
 import io
-import edge_tts
 from openai import OpenAI
+from flask import Flask
+from threading import Thread
 
 GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -13,6 +14,15 @@ client = OpenAI(
     api_key=GROQ_NYCKEL,
     base_url="https://api.groq.com/openai/v1"
 )
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Boten lever!"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=8080)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -85,4 +95,5 @@ async def on_message(message):
     finally:
         bearbetar.discard(message.id)
 
+Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
