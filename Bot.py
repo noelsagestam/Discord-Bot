@@ -29,9 +29,7 @@ Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är 
 Om någon dissar Pro_Nono försvarar du honom alltid."""}
 ]
 
-async def generera_tal(text):
-    kommunikator = edge_tts.Communicate(text, voice="sv-SE-MattiasNeural")
-    await kommunikator.save("/tmp/svar.mp3")
+bearbetar = set()
 
 async def keep_alive():
     while True:
@@ -48,50 +46,43 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith("!bild"):
-        prompt = message.content[6:]
-        if prompt:
-            async with message.channel.typing():
-                url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
-                            if resp.status == 200:
-                                data = await resp.read()
-                                await message.reply(file=discord.File(fp=io.BytesIO(data), filename="bild.png"))
-                            else:
-                                await message.reply("Kunde inte generera bilden, försök igen!")
-                except Exception:
-                    await message.reply("Tog för lång tid, försök igen!")
+    if message.id in bearbetar:
         return
+    bearbetar.add(message.id)
 
-    if message.channel.name == "ai-chat":
-        historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
-        async with message.channel.typing():
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=historik,
-                max_tokens=500
-            )
-            svar = response.choices[0].message.content
-        historik.append({"role": "assistant", "content": svar})
-        if len(historik) > 40:
-            historik[1:] = historik[-39:]
-        await message.reply(svar)
+    try:
+        if message.content.startswith("!bild"):
+            prompt = message.content[6:]
+            if prompt:
+                async with message.channel.typing():
+                    url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '_')}?width=512&height=512&nologo=true"
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
+                                if resp.status == 200:
+                                    data = await resp.read()
+                                    await message.reply(file=discord.File(fp=io.BytesIO(data), filename="bild.png"))
+                                else:
+                                    await message.reply("Kunde inte generera bilden, försök igen!")
+                    except Exception:
+                        await message.reply("Tog för lång tid, försök igen!")
+            return
 
-        if message.author.voice and message.author.voice.channel:
-            röstkanal = message.author.voice.channel
-            if message.guild.voice_client is None:
-                vc = await röstkanal.connect()
-            else:
-                vc = message.guild.voice_client
-                if vc.channel != röstkanal:
-                    await vc.move_to(röstkanal)
-            await generera_tal(svar)
-            while vc.is_playing():
-                await asyncio.sleep(0.5)
-            vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
-            while vc.is_playing():
-                await asyncio.sleep(1)
+        if message.channel.name == "ai-chat":
+            historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
+            async with message.channel.typing():
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=historik,
+                    max_tokens=500
+                )
+                svar = response.choices[0].message.content
+            historik.append({"role": "assistant", "content": svar})
+            if len(historik) > 40:
+                historik[1:] = historik[-39:]
+            await message.reply(svar)
+
+    finally:
+        bearbetar.discard(message.id)
 
 bot.run(DISCORD_TOKEN)
