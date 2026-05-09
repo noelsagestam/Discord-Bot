@@ -1,4 +1,4 @@
-pythonimport discord
+import discord
 import os
 import asyncio
 import aiohttp
