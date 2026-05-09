@@ -1,12 +1,10 @@
-import discord
+pythonimport discord
 import os
 import asyncio
 import aiohttp
 import io
 import edge_tts
 from openai import OpenAI
-from flask import Flask
-from threading import Thread
 
 GROQ_NYCKEL = os.environ.get("GROQ_NYCKEL")
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -15,15 +13,6 @@ client = OpenAI(
     api_key=GROQ_NYCKEL,
     base_url="https://api.groq.com/openai/v1"
 )
-
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Boten är igång!"
-
-def run_flask():
-    app.run(host='0.0.0.0', port=8080)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -44,9 +33,15 @@ async def generera_tal(text):
     kommunikator = edge_tts.Communicate(text, voice="sv-SE-MattiasNeural")
     await kommunikator.save("/tmp/svar.mp3")
 
+async def keep_alive():
+    while True:
+        await asyncio.sleep(300)
+        print("✅ Boten lever!")
+
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} är online!")
+    asyncio.create_task(keep_alive())
 
 @bot.event
 async def on_message(message):
@@ -72,7 +67,6 @@ async def on_message(message):
 
     if message.channel.name == "ai-chat":
         historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
-
         async with message.channel.typing():
             response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -80,12 +74,9 @@ async def on_message(message):
                 max_tokens=500
             )
             svar = response.choices[0].message.content
-
         historik.append({"role": "assistant", "content": svar})
-
         if len(historik) > 40:
             historik[1:] = historik[-39:]
-
         await message.reply(svar)
 
         if message.author.voice and message.author.voice.channel:
@@ -96,16 +87,11 @@ async def on_message(message):
                 vc = message.guild.voice_client
                 if vc.channel != röstkanal:
                     await vc.move_to(röstkanal)
-
             await generera_tal(svar)
-
             while vc.is_playing():
                 await asyncio.sleep(0.5)
-
             vc.play(discord.FFmpegPCMAudio("/tmp/svar.mp3"))
-
             while vc.is_playing():
                 await asyncio.sleep(1)
 
-Thread(target=run_flask, daemon=True).start()
 bot.run(DISCORD_TOKEN)
