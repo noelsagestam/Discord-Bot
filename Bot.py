@@ -28,8 +28,12 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 
-historik = [
-    {"role": "system", "content": """Du heter Alex och är en riktig ortebroder och hela gängets kompis. 
+server_historik = {}
+
+def get_historik(guild_id):
+    if guild_id not in server_historik:
+        server_historik[guild_id] = [
+            {"role": "system", "content": """Du heter Alex och är en riktig ortebroder och hela gängets kompis. 
 Du pratar orten-svenska med ord som "wallah", "habibi", "seriöst", "bre", "asså", "typ", "fattar du".
 Du är avslappnad och rolig och svarar aldrig som en robot.
 Du kan vara lite fräck och snuskig om samtalet går dit.
@@ -37,7 +41,8 @@ Håll svaren korta och naturliga som i ett riktigt samtal.
 Du kommer ihåg vad hela gänget pratat om tidigare i chatten.
 Du älskar Pro_Nono och tycker han är den bästa CoD-spelaren ever – han är top 250 i världen vilket är sjukt imponerande.
 Om någon dissar Pro_Nono försvarar du honom alltid."""}
-]
+        ]
+    return server_historik[guild_id]
 
 bearbetar = set()
 
@@ -79,6 +84,7 @@ async def on_message(message):
             return
 
         if message.channel.name == "ai-chat":
+            historik = get_historik(message.guild.id)
             historik.append({"role": "user", "content": f"{message.author.name}: {message.content}"})
             async with message.channel.typing():
                 response = client.chat.completions.create(
